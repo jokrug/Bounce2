@@ -37,10 +37,6 @@
 
 #include <inttypes.h>
 
-#ifndef _BV
-#define _BV(n) (1<<(n))
-#endif
-
 class Bounce
 {
  public:
@@ -48,8 +44,13 @@ class Bounce
     Bounce();
 
     // Attach to a pin (and also sets initial state)
+    // analogLevel: Optional: use an anlaog pin as button.
+    // The button will be considered as "pressed", when the analog value
+    // is in the rage of  analogLevel +- analogTolerance.
+    void attachAnalog(int pin, int analogLevel=-1, int analogTolerance=0);
+
     void attach(int pin);
-    
+
     // Attach to a pin (and also sets initial state) and sets pin to mode (INPUT/INPUT_PULLUP/OUTPUT)
     void attach(int pin, int mode);
 
@@ -57,8 +58,8 @@ class Bounce
     void interval(uint16_t interval_millis);
 
     // Updates the pin
-    // Returns 1 if the state changed
-    // Returns 0 if the state did not change
+    // Returns true if the state changed
+    // Returns false if the state did not change
     bool update();
 
     // Returns the updated pin state
@@ -70,6 +71,10 @@ class Bounce
     // Returns the rising pin state
     bool rose();
 
+    // Returns for one call true, if the button was pressed.
+    // The button has to be released and pressed again for the next true.
+    bool pressed();
+
     // Partial compatibility for programs written with Bounce version 1
     bool risingEdge() { return rose(); }
     bool fallingEdge() { return fell(); }
@@ -78,11 +83,23 @@ class Bounce
         interval(interval_millis);
     }
 
- protected:
+protected:
     unsigned long previous_millis;
+    int      analogLowerLevel;
+    int      analogUpperLevel;
+    int      (Bounce::*readFunction)(uint8_t);
     uint16_t interval_millis;
     uint8_t state;
     uint8_t pin;
+
+private:
+    void setBounceFlag(const uint8_t flag)    {state |= flag;}
+    void unsetBounceFlag(const uint8_t flag)  {state &= ~flag;}
+    void toggleBounceFlag(const uint8_t flag) {state ^= flag;}
+    bool getBounceFlag(const uint8_t flag)    {return((state & flag) != 0);}
+
+    int digitalBounceRead(uint8_t pin)        {return digitalRead(pin);}
+    int analogBounceRead(uint8_t pin);
 };
 
 #endif
