@@ -19,6 +19,9 @@
   COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
   IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  Der Sketch verwendet 3.354 Bytes (10%) des Programmspeicherplatzes. Das Maximum sind 30.720 Bytes.
+Globale Variablen verwenden 294 Bytes (14%) des dynamischen Speichers, 1.754 Bytes für lokale Variablen verbleiben. Das Maximum sind 2.048 Bytes.
 */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -37,18 +40,15 @@
 
 #include <inttypes.h>
 
+
 class Bounce
 {
  public:
     // Create an instance of the bounce library
     Bounce();
+    // Use an anlaog pin as button. 
 
     // Attach to a pin (and also sets initial state)
-    // analogLevel: Optional: use an anlaog pin as button.
-    // The button will be considered as "pressed", when the analog value
-    // is in the rage of  analogLevel +- analogTolerance.
-    void attachAnalog(int pin, int analogLevel=-1, int analogTolerance=0);
-
     void attach(int pin);
 
     // Attach to a pin (and also sets initial state) and sets pin to mode (INPUT/INPUT_PULLUP/OUTPUT)
@@ -58,7 +58,10 @@ class Bounce
     void interval(uint16_t interval_millis);
 
     // Updates the pin
-    // Returns true if the state changed
+    // Returns true if the state changedounce::Bounce() : BounceBase()
+{
+}
+
     // Returns false if the state did not change
     bool update();
 
@@ -71,35 +74,51 @@ class Bounce
     // Returns the rising pin state
     bool rose();
 
-    // Returns for one call true, if the button was pressed.
+    // Returns true for one call, if the button was pressed.
     // The button has to be released and pressed again for the next true.
     bool pressed();
 
     // Partial compatibility for programs written with Bounce version 1
-    bool risingEdge() { return rose(); }
+    bool risingEdge()  { return rose(); }
     bool fallingEdge() { return fell(); }
+    
     Bounce(uint8_t pin, unsigned long interval_millis ) : Bounce() {
         attach(pin);
         interval(interval_millis);
     }
 
 protected:
-    unsigned long previous_millis;
-    int      analogLowerLevel;
-    int      analogUpperLevel;
-    int      (Bounce::*readFunction)(uint8_t);
-    uint16_t interval_millis;
-    uint8_t state;
-    uint8_t pin;
+    inline virtual int bounceRead() {digitalRead(mPin);}
+    uint8_t mPin;  
 
 private:
-    void setBounceFlag(const uint8_t flag)    {state |= flag;}
-    void unsetBounceFlag(const uint8_t flag)  {state &= ~flag;}
-    void toggleBounceFlag(const uint8_t flag) {state ^= flag;}
-    bool getBounceFlag(const uint8_t flag)    {return((state & flag) != 0);}
+    inline void setBounceFlag(const uint8_t flag)    {mState |= flag;}
+    inline void unsetBounceFlag(const uint8_t flag)  {mState &= ~flag;}
+    inline void toggleBounceFlag(const uint8_t flag) {mState ^= flag;}
+    inline bool getBounceFlag(const uint8_t flag)    {return((mState & flag) != 0);}
 
-    int digitalBounceRead(uint8_t pin)        {return digitalRead(pin);}
-    int analogBounceRead(uint8_t pin);
+    unsigned long mPreviousMillis;
+    uint16_t mIntervalMillis;
+    uint8_t  mState;
+};
+
+
+class BounceAnalog : public Bounce
+{
+public:
+    BounceAnalog();
+    
+    // The button will be considered as "pressed", when the analog value
+    // is between (analogLevel-analogTolerance) and (analogLevel+analogTolerance).
+    // analogLevel and analogTolerance are in digits. For Arduino it should be between 0 and 1024.
+    void attachAnalog(int pin, int analogLevel, int analogTolerance);
+
+protected:
+    virtual int bounceRead();
+
+private:
+    int mAnalogLowerLevel;
+    int mAnalogUpperLevel;
 };
 
 #endif

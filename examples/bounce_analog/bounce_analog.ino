@@ -15,13 +15,14 @@
 #define HYSTERESE    50
 #define NO_BUTTOS    4
 
-Bounce deBouncedButtons[NO_BUTTOS];
+BounceAnalog deBouncedButtons[NO_BUTTOS];
 
 void setup() {
   for(int i = 0; i<NO_BUTTOS; i++)
   {
-    deBouncedButtons[i] = Bounce();
+    deBouncedButtons[i] = BounceAnalog();
     int analogLevel = (MAX_ANALOG-HYSTERESE)/(i+1);
+    //deBouncedButtons[i].attach(GPIO_ANALOG);
     deBouncedButtons[i].attachAnalog(GPIO_ANALOG, analogLevel, HYSTERESE);
   }
 
