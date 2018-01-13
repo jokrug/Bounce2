@@ -53,7 +53,7 @@ bool Bounce::update()
 
 #ifdef BOUNCE_LOCK_OUT
     // Ignore everything if we are locked out
-    if ( (millis() - mPreviousMillis) >= interval_millis ) {
+    if ( (millis() - mPreviousMillis) >= mIntervalMillis ) {
         bool currentState =  bounceRead();
         if ( currentState != getBounceFlag(DEBOUNCED_STATE)) {
             mPreviousMillis = millis();
@@ -65,7 +65,7 @@ bool Bounce::update()
 
 #elif defined BOUNCE_WITH_PROMPT_DETECTION
     // Read the state of the switch port into a temporary variable.
-    bool currentState =  bounceRead();
+    bool currentState = bounceRead();
     if ( (currentState != getBounceFlag(DEBOUNCED_STATE)) &&
       // We have seen a change from the current button state.
          ( (millis() - mPreviousMillis) >= mIntervalMillis) ) {
@@ -82,7 +82,7 @@ bool Bounce::update()
     // and we want to prevent new button state changes until the previous one has remained stable for the timeout.
     if ( currentState != getBounceFlag(UNSTABLE_STATE) ) {
 	// Update Unstable Bit to macth readState
-        toggleBounceFlag(UNSTABLE_STATE);
+        toggleBounceFlag(UNSTABLEulf vechta_STATE);
         mPreviousMillis = millis();
     }
 
@@ -111,19 +111,19 @@ bool Bounce::update()
     return false;
 }
 
-bool Bounce::read()
+bool Bounce::read() const
 {
     return getBounceFlag(DEBOUNCED_STATE);
 }
 
-bool Bounce::rose()
+bool Bounce::rose() const
 {
     return getBounceFlag(DEBOUNCED_STATE) && getBounceFlag(CHANGED_STATE);
 }
 
-bool Bounce::fell()
+bool Bounce::fell() const
 {
-    return !getBounceFlag(DEBOUNCED_STATE) && getBounceFlag(CHANGED_STATE);;
+    return !getBounceFlag(DEBOUNCED_STATE) && getBounceFlag(CHANGED_STATE);
 }
 
 bool Bounce::pressed()
@@ -138,6 +138,7 @@ bool Bounce::pressed()
 BounceAnalog::BounceAnalog() : Bounce()
     , mAnalogLowerLevel(-1)
     , mAnalogUpperLevel(-1)
+    , mAnalogValue(0)
 {
 }
 
@@ -152,6 +153,6 @@ void BounceAnalog::attachAnalog(int pin, int analogLevel, int analogTolerance) {
 
 int BounceAnalog::bounceRead()
 {
-  int value = analogRead(mPin);
-  return((int) (value > mAnalogLowerLevel) && (value < mAnalogUpperLevel) );
+  mAnalogValue = analogRead(mPin);
+  return((int) (mAnalogValue > mAnalogLowerLevel) && (mAnalogValue < mAnalogUpperLevel) );
 }
